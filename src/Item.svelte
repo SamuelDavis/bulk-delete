@@ -14,6 +14,7 @@
   const checked = isVideo(data)
     ? $selectedVideos.some(({ id }) => id === data.id)
     : null;
+  console.debug({ checked });
   const href = isPlaylist(data)
     ? `https://www.youtube.com/playlist?list=${data.id}`
     : `https://www.youtube.com/watch?${new URLSearchParams({
@@ -30,7 +31,7 @@
       <span>{itemCount}</span>
     {/if}
     {#if checked !== null}
-      <input type="checkbox" {checked} />
+      <input type="checkbox" checked={checked ? "checked" : undefined} />
     {/if}
   </header>
   <hr />

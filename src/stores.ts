@@ -18,8 +18,8 @@ export const playlists = persistent<Playlist[]>("playlists", []);
 export const videos = persistent<Video[]>("videos", []);
 export const selectedPlaylist = persistent<Playlist>("selected-playlist", null);
 export const selectedVideos = persistent<Video[]>("selected-videos", []);
-export const queuedForDelete = persistent<Video[]>("queued-for-delete", []);
 export const pageToken = persistent("page-token", null);
+export const deleting = writable(false);
 export const playlistGenerator = derived([youtube], ([youtube]) =>
   youtube ? listPlaylists(youtube) : null
 );

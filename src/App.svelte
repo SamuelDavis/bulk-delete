@@ -2,15 +2,22 @@
   import { CLIENT_ID, SCOPES } from "../config.json";
   import {
     auth,
+    deleting,
     onMore,
     playlists,
     selectedPlaylist,
     selectedPlaylistVideos,
     selectedVideos,
     user,
+    videos,
+    youtube,
   } from "./stores";
   import Item from "./Item.svelte";
   import type { Video } from "./types";
+  import { get } from "svelte/store";
+  import { deleteVideo, RateLimitError } from "./api";
+
+  let open = false;
 
   const onSignIn = () => $auth.signIn();
   const onSignOut = () => {
@@ -25,6 +32,46 @@
         ? [...videos.slice(0, index), ...videos.slice(index + 1)]
         : [...videos, video];
     });
+  }
+
+  async function onDeleteAll() {
+    $deleting = true;
+    const inFlightLimit = 7;
+    const timeout = 1500;
+    const chunks = $selectedVideos.reduce(
+      (acc, video) => {
+        const [first, ...rest] = acc;
+        if (first.length >= inFlightLimit) return [[video], first, ...rest];
+        else return [[video, ...first], ...rest];
+      },
+      [[]]
+    );
+
+    const client = get(youtube);
+    let stop = false;
+    for (const chunk of chunks) {
+      if (stop) break;
+      await Promise.all([
+        chunk.map(({ id }) =>
+          deleteVideo(client, id)
+            .then(() => {
+              videos.update((v) => v.filter((v) => v.id !== id));
+              selectedVideos.update((v) => v.filter((v) => v.id !== id));
+            })
+            .catch((e) => {
+              console.error(e);
+              if (e instanceof RateLimitError) {
+                alert("Rate Limit reached.");
+              } else {
+                alert(e.message);
+              }
+              stop = true;
+            })
+        ),
+        new Promise((resolve) => setTimeout(resolve, timeout)),
+      ]);
+    }
+    $deleting = false;
   }
 
   gapi.load("client:auth2", () => {
@@ -47,8 +94,17 @@
 <hr />
 
 <aside>
-  <details disabled={$selectedVideos.length === 0}>
-    <summary>Selected</summary>
+  <details bind:open>
+    <summary>
+      <span>Selected</span>
+      <button
+        disabled={$selectedVideos.length === 0 || !open || $deleting}
+        on:click={onDeleteAll}
+        title={$deleting ? "deleting..." : "Delete All"}
+      >
+        Delete All
+      </button>
+    </summary>
     <ol>
       {#each $selectedVideos as data (data.id)}
         <li on:click={() => onToggleSelect(data)}>

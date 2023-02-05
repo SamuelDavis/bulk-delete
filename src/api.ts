@@ -1,4 +1,4 @@
-import type { PageToken, Playlist, YouTube } from "./types";
+import type { PageToken, Playlist, Video, YouTube } from "./types";
 
 export async function* listPlaylists(youtube: YouTube) {
   const channels = await youtube.channels.list({
@@ -50,3 +50,20 @@ export async function* listVideos(
     yield items;
   } while (status === 200 && pageToken);
 }
+
+export async function deleteVideo(youtube: YouTube, id: Video["id"]) {
+  return youtube.playlistItems
+    .delete({ id })
+    .then((response) => {
+      if (response.status !== 204)
+        throw new Error(`failed to delete playlist item: ${response.status}`, {
+          cause: { arguments, response },
+        });
+    })
+    .catch((e) => {
+      if (e.status === 404) return;
+      if (e.status === 403) throw new RateLimitError();
+    });
+}
+
+export class RateLimitError extends Error {}
