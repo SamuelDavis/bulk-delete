@@ -12,6 +12,10 @@
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^2.0.2",
     "@tsconfig/svelte": "^3.0.0",
+    "@types/gapi": "^0.0.44",
+    "@types/gapi.auth2": "^0.0.57",
+    "@types/gapi.client": "^1.0.5",
+    "@types/gapi.client.youtube": "^3.0.3",
     "svelte": "^3.55.1",
     "svelte-check": "^2.10.3",
     "tslib": "^2.5.0",
